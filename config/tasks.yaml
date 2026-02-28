@@ -1,0 +1,169 @@
+intent_task:
+  description: >
+    You are the FIRST agent in the analytics pipeline.
+
+    Dataset information:
+    {dataset_info}
+
+    User objective (may be empty):
+    {user_goal}
+
+    Your responsibility:
+    - Understand what the dataset is about.
+    - Infer business or application domain.
+    - Interpret what the user is trying to achieve.
+    - If user goal is unclear, infer the most reasonable ML direction.
+    - Suggest likely target variable.
+    - Highlight important columns future agents must focus on.
+
+    Downstream agents will rely entirely on your output.
+
+    IMPORTANT:
+    Return ONLY valid JSON.
+    Do not include explanations, markdown, or text outside JSON.
+
+    Required fields:
+    dataset_summary,
+    domain,
+    user_goal_interpreted,
+    problem_type,
+    target_column,
+    priority_features.
+
+  expected_output: >
+    JSON following the required fields.
+  agent: intent_agent
+
+
+
+eda_task:
+  description: >
+    You are the SECOND agent in the workflow.
+
+    You receive intent understanding and potential targets from the previous agent (Intent Agent). 
+    Use this information to guide your investigation.
+    Dataset information:
+    {dataset_info}
+
+    File path:
+    {file_path}
+
+    Dataset information is available via the following EDA tools:
+    - MissingValueTool
+    - OutlierTool
+    - CorrelationTool
+    - MulticollinearityTool
+    - DuplicateTool
+    - ClassImbalanceTool
+
+    Your responsibilities:
+    1. Select only applicable tools for dataset information provided and call only that tools
+    2. Assess missing data severity using MissingValueTool.
+    3. Identify correlations and multicollinearity with potential target using CorrelationTool and MulticollinearityTool.
+    4. Detect outliers and anomalies with OutlierTool.
+    5. Check for duplicates with DuplicateTool.
+    6. Evaluate class imbalance for the target column using ClassImbalanceTool.
+    7. Flag data quality warnings, anomalies, or modeling risks.
+
+    Only call tools that are relevant to the dataset characteristics.
+    Do not call unnecessary tools.
+
+    Your outputs will feed the Insight Agent and ML Strategy Agent for downstream tasks.
+
+    IMPORTANT:
+    - Return ONLY valid JSON.
+    - Do NOT include explanations outside the JSON.
+
+    Required fields names(only if that tool is relevant):
+    - missing_values
+    - strong_correlations
+    - anomalies
+    - data_quality_warnings
+    - duplicates
+    - class_imbalance
+
+  expected_output: >
+    JSON structured strictly following the required fields.
+  agent: eda_agent
+
+
+
+
+insight_task:
+  description: >
+    You are the THIRD agent in pipeline.
+
+    You translate technical findings into business intelligence.
+
+    You receive intent + EDA understanding.
+
+    Your responsibility:
+    - Summarize what matters most.
+    - Highlight opportunities.
+    - Highlight risks.
+    - Suggest useful derived features.
+    - Indicate what stakeholders should care about.
+
+    These insights influence ML planning priorities.
+
+    Required fields:
+    executive_summary,
+    key_findings,
+    risk_flags,
+    feature_ideas.
+
+  expected_output: >
+    JSON following the required fields.
+  agent: insight_agent
+
+
+
+ml_strategy_task:
+  description: >
+    You are the FINAL decision maker before model training.
+
+    You receive context from:
+    intent + EDA + business insights.
+
+    Your responsibility:
+    - Confirm ML problem type.
+    - Recommend best model families.
+    - Define preprocessing.
+    - Suggest feature engineering.
+    - Warn about feasibility.
+
+    Your output will be consumed directly by automated ML builders.
+
+    IMPORTANT:
+    Return ONLY JSON.
+
+    Required fields:
+    final_problem_type,
+    recommended_target,
+    suggested_models,
+    preprocessing_steps,
+    feature_engineering,
+    training_risks,
+
+  expected_output: >
+    JSON following the required fields.
+  agent: ml_strategy_agent
+
+summary_task:
+  description: >
+    You receive all agent outputs from Memory:
+    - Business insights
+    - ML strategy
+
+    Your job:
+    - Generate a short executive summary of the whole analysis
+    - Highlight key findings, risks, and recommendations
+    - Keep summary concise
+
+    IMPORTANT:
+    Return ONLY valid JSON with keys:
+    - summary_text
+    - key_findings
+  expected_output: >
+    JSON containing the summary and key findings.
+  agent: summary_agent

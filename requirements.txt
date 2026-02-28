@@ -1,0 +1,6 @@
+crewai[tools]==1.9.3
+litellm==1.75.3
+matplotlib==3.10.8
+pandas==2.3.3
+statsmodels==0.14.6
+streamlit==1.54.0
